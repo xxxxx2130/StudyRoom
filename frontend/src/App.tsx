@@ -380,7 +380,6 @@ function App() {
           ) : (
             <button className={page === 'availability' ? 'active' : ''} onClick={() => setPage('availability')}>Disponibilités</button>
           )}
-          <button className={page === 'reservations' ? 'active' : ''} onClick={() => setPage('reservations')}>Mes réservations</button>
         </nav>
         <AccessibilityControls
           theme={theme}
@@ -831,16 +830,16 @@ function AdminPanel({
       {section === 'requests' && (
         <div className="content-panel">
           {reservations.length === 0 ? <p className="empty-state">Aucune demande pour le moment.</p> : (
-            <div className="table-wrap"><table>
+            <div className="table-wrap table-cards"><table>
               <thead><tr><th>Demandeur</th><th>Salle</th><th>Créneau</th><th>Motif</th><th>Statut</th><th>Actions</th></tr></thead>
               <tbody>{reservations.map((reservation) => (
                 <tr key={reservation.id}>
-                  <td><strong>{reservation.user?.firstName} {reservation.user?.lastName}</strong><small>{reservation.user?.email}</small></td>
-                  <td>{reservation.room.code}</td>
-                  <td>{formatDate(reservation.startAt, { day: 'numeric', month: 'short' })}<small>{formatTime(reservation.startAt)}–{formatTime(reservation.endAt)}</small></td>
-                  <td>{reservation.purpose}</td>
-                  <td><span className={`status-pill status-${reservation.status.toLowerCase()}`}>{statusLabel(reservation.status)}</span></td>
-                  <td className="table-actions">{reservation.status === 'PENDING' && <><button disabled={busy} onClick={() => void runAction(() => api(`/api/reservations/${reservation.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'CONFIRMED' }) }), 'Réservation confirmée.')}>Confirmer</button><button className="danger-text" disabled={busy} onClick={() => void runAction(() => api(`/api/reservations/${reservation.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'REJECTED' }) }), 'Demande refusée.')}>Refuser</button></>}</td>
+                  <td><span className="table-cell-label">Demandeur</span><strong>{reservation.user?.firstName} {reservation.user?.lastName}</strong><small>{reservation.user?.email}</small></td>
+                  <td><span className="table-cell-label">Salle</span>{reservation.room.code}</td>
+                  <td><span className="table-cell-label">Créneau</span>{formatDate(reservation.startAt, { day: 'numeric', month: 'short' })}<small>{formatTime(reservation.startAt)}–{formatTime(reservation.endAt)}</small></td>
+                  <td><span className="table-cell-label">Motif</span>{reservation.purpose}</td>
+                  <td><span className="table-cell-label">Statut</span><span className={`status-pill status-${reservation.status.toLowerCase()}`}>{statusLabel(reservation.status)}</span></td>
+                  <td className="table-actions"><span className="table-cell-label">Actions</span>{reservation.status === 'PENDING' && <><button disabled={busy} onClick={() => void runAction(() => api(`/api/reservations/${reservation.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'CONFIRMED' }) }), 'Réservation confirmée.')}>Confirmer</button><button className="danger-text" disabled={busy} onClick={() => void runAction(() => api(`/api/reservations/${reservation.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'REJECTED' }) }), 'Demande refusée.')}>Refuser</button></>}</td>
                 </tr>
               ))}</tbody>
             </table></div>
@@ -918,13 +917,13 @@ function AdminPanel({
 
       {section === 'users' && (
         <div className="content-panel">
-          <div className="table-wrap"><table>
+          <div className="table-wrap table-cards"><table>
             <thead><tr><th>Utilisateur</th><th>Inscription</th><th>Rôle</th></tr></thead>
             <tbody>{users.map((person) => (
               <tr key={person.id}>
-                <td><strong>{person.firstName} {person.lastName}</strong><small>{person.email}</small></td>
-                <td>{formatDate(person.createdAt, { day: 'numeric', month: 'long', year: 'numeric' })}</td>
-                <td>{person.role === 'ADMIN' ? <span className="role-label">Administrateur</span> : (
+                <td><span className="table-cell-label">Utilisateur</span><strong>{person.firstName} {person.lastName}</strong><small>{person.email}</small></td>
+                <td><span className="table-cell-label">Inscription</span>{formatDate(person.createdAt, { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                <td><span className="table-cell-label">Rôle</span>{person.role === 'ADMIN' ? <span className="role-label">Administrateur</span> : (
                   <select aria-label={`Rôle de ${person.firstName} ${person.lastName}`} disabled={busy} onChange={(event) => void runAction(() => api(`/api/admin/users/${person.id}`, { method: 'PATCH', body: JSON.stringify({ role: event.target.value }) }), 'Rôle mis à jour.')} value={person.role}>
                     <option value="STUDENT">Étudiant</option><option value="TEACHER">Enseignant</option>
                   </select>

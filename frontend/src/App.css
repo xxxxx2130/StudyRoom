@@ -1,5 +1,6 @@
 #root {
   min-height: 100vh;
+  overflow-x: clip;
 }
 
 button,
@@ -94,7 +95,7 @@ button:disabled {
 
 .auth-layout {
   display: grid;
-  grid-template-columns: minmax(340px, .92fr) 1.08fr;
+  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
   min-height: 100vh;
 }
 
@@ -103,6 +104,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0;
   overflow: hidden;
   padding: 40px clamp(32px, 7vw, 110px);
   position: relative;
@@ -199,6 +201,7 @@ button:disabled {
   align-items: center;
   display: flex;
   justify-content: center;
+  min-width: 0;
   padding: 48px 28px;
 }
 
@@ -312,6 +315,7 @@ button:disabled {
   max-width: 1500px;
   min-height: 100vh;
   padding: 0 clamp(20px, 6vw, 92px);
+  width: 100%;
 }
 
 .app-header {
@@ -430,14 +434,20 @@ button:disabled {
   margin: 0 auto;
   max-width: 1240px;
   min-height: calc(100vh - 145px);
+  min-width: 0;
   padding: 36px 0 56px;
 }
 
 .page-heading {
   align-items: end;
   display: flex;
+  gap: 16px;
   justify-content: space-between;
   margin: 0 0 24px;
+}
+
+.page-heading > div {
+  min-width: 0;
 }
 
 .page-heading h1 {
@@ -621,7 +631,7 @@ button:disabled {
 .room-grid {
   display: grid;
   gap: 15px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
 }
 
 .room-card {
@@ -680,7 +690,7 @@ button:disabled {
   border-top: 1px solid #e9ddd5;
   display: grid;
   gap: 30px;
-  grid-template-columns: .8fr 1.2fr;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
   margin-top: 32px;
   padding: 28px 0 0;
   scroll-margin-top: 25px;
@@ -715,6 +725,7 @@ button:disabled {
 .booking-flow {
   display: grid;
   gap: 14px;
+  min-width: 0;
 }
 
 .availability-results {
@@ -742,6 +753,11 @@ button:disabled {
   justify-content: space-between;
   padding: 12px;
   text-align: left;
+}
+
+.available-room > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .available-room:hover,
@@ -832,6 +848,7 @@ button:disabled {
 .reservation-copy h3 {
   font-size: calc(13px * var(--text-scale, 1));
   margin: 0 0 4px;
+  overflow-wrap: anywhere;
 }
 
 .reservation-copy p,
@@ -955,6 +972,10 @@ button:disabled {
   margin-top: 4px;
 }
 
+.table-cell-label {
+  display: none;
+}
+
 .table-actions {
   white-space: nowrap;
 }
@@ -972,7 +993,7 @@ button:disabled {
   align-items: start;
   display: grid;
   gap: 17px;
-  grid-template-columns: 1.2fr .8fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
 }
 
 .admin-columns .content-panel h2 {
@@ -1316,7 +1337,7 @@ html[data-theme='dark'] .status-cancelled {
 
 @media (max-width: 900px) {
   .auth-layout {
-    grid-template-columns: .8fr 1.2fr;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
   }
 
   .auth-brand {
@@ -1336,6 +1357,13 @@ html[data-theme='dark'] .status-cancelled {
 
   .app-header > .accessibility-controls {
     margin-left: auto;
+  }
+
+  .account-name {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .room-edit-form {
@@ -1388,7 +1416,27 @@ html[data-theme='dark'] .status-cancelled {
   }
 
   .app-header {
-    gap: 8px;
+    display: grid;
+    gap: 10px 8px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px 0;
+  }
+
+  .app-header > .brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .app-header > .accessibility-controls {
+    grid-column: 2;
+    grid-row: 1;
+    margin-left: 0;
+  }
+
+  .app-header > .account-menu {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
   }
 
   .brand {
@@ -1403,10 +1451,6 @@ html[data-theme='dark'] .status-cancelled {
 
   .account-menu {
     gap: 7px;
-  }
-
-  .app-header > .accessibility-controls {
-    margin-left: auto;
   }
 
   .app-header > .accessibility-controls > button {
@@ -1435,8 +1479,10 @@ html[data-theme='dark'] .status-cancelled {
   }
 
   .app-nav {
+    grid-column: 1 / -1;
+    grid-row: 3;
     gap: 16px;
-    justify-content: space-between;
+    min-width: 0;
     overflow-x: auto;
   }
 
@@ -1455,6 +1501,10 @@ html[data-theme='dark'] .status-cancelled {
     gap: 16px;
   }
 
+  .page-heading > .button {
+    max-width: 100%;
+  }
+
   .page-heading h1 {
     font-size: calc(29px * var(--text-scale, 1));
   }
@@ -1468,6 +1518,11 @@ html[data-theme='dark'] .status-cancelled {
 
   .calendar-controls {
     align-self: stretch;
+    flex-wrap: wrap;
+  }
+
+  .calendar-controls button {
+    flex: 1 1 auto;
   }
 
   .calendar-grid {
@@ -1477,7 +1532,7 @@ html[data-theme='dark'] .status-cancelled {
   .booking-section {
     gap: 20px;
     grid-template-columns: 1fr;
-    padding: 21px;
+    padding: 21px 0 0;
   }
 
   .booking-form {
@@ -1502,6 +1557,82 @@ html[data-theme='dark'] .status-cancelled {
 
   .content-panel {
     padding: 15px;
+  }
+
+  .table-cards {
+    overflow: visible;
+  }
+
+  .admin-area .table-cards table,
+  .admin-area .table-cards tbody,
+  .admin-area .table-cards tr,
+  .admin-area .table-cards td {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-area .table-cards thead {
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+  }
+
+  .admin-area .table-cards tr {
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #ece3dd);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    padding: 5px 12px;
+  }
+
+  .admin-area .table-cards tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .admin-area .table-cards td {
+    align-items: start;
+    border-top: 1px solid var(--border, #ece3dd);
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(76px, .35fr) minmax(0, 1fr);
+    overflow-wrap: anywhere;
+    padding: 10px 0;
+  }
+
+  .admin-area .table-cards td:first-child {
+    border-top: 0;
+  }
+
+  .admin-area .table-cards td strong,
+  .admin-area .table-cards td small {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .table-cell-label {
+    color: var(--muted);
+    display: block;
+    font-size: calc(10px * var(--text-scale, 1));
+    font-weight: 650;
+  }
+
+  .admin-area .table-cards .table-actions {
+    white-space: normal;
+  }
+
+  .admin-area .table-cards .table-actions button {
+    padding-left: 0;
+    padding-right: 12px;
+  }
+
+  .admin-area .table-cards select {
+    min-width: 0;
+    width: 100%;
   }
 
   .admin-tabs {
@@ -1530,5 +1661,52 @@ html[data-theme='dark'] .status-cancelled {
     align-items: start;
     flex-direction: column;
     gap: 7px;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-shell {
+    padding: 0 12px;
+  }
+
+  .auth-brand {
+    min-height: 350px;
+    padding: 18px;
+  }
+
+  .auth-panel {
+    padding: 30px 18px;
+  }
+
+  .auth-visual {
+    padding: 10px;
+  }
+
+  .agenda-table {
+    grid-template-columns: 26px repeat(4, minmax(0, 1fr));
+  }
+
+  .text-size-controls span {
+    display: none;
+  }
+
+  .booking-form,
+  .availability-results,
+  .content-panel {
+    padding: 13px;
+  }
+
+  .admin-area .table-cards tr {
+    padding-left: 9px;
+    padding-right: 9px;
+  }
+
+  .admin-area .table-cards td {
+    gap: 7px;
+    grid-template-columns: minmax(65px, .3fr) minmax(0, 1fr);
+  }
+
+  .reservation-item {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
   }
 }
