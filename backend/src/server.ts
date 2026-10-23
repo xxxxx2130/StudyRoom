@@ -1,6 +1,9 @@
 import 'dotenv/config'
 import { createHash, randomBytes } from 'node:crypto'
+import { readFile, stat } from 'node:fs/promises'
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import { dirname, extname, resolve, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   Prisma,
   PrismaClient,
@@ -10,9 +13,22 @@ import {
 import { hashPassword, verifyPassword } from './auth.js'
 
 const port = Number(process.env.PORT ?? 4000)
+const host = process.env.HOST ?? (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1')
 const prisma = new PrismaClient()
+const frontendDirectory = resolve(dirname(fileURLToPath(import.meta.url)), '../../frontend/dist')
 const sessionLifetimeMs = 30 * 24 * 60 * 60 * 1000
 const loginAttempts = new Map<string, number[]>()
+const contentTypes: Record<string, string> = {
+  '.css': 'text/css; charset=utf-8',
+  '.html': 'text/html; charset=utf-8',
+  '.ico': 'image/x-icon',
+  '.js': 'text/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
+}
 
 class HttpError extends Error {
   constructor(
@@ -45,6 +61,59 @@ function sendJson(
     ...headers,
   })
   response.end(JSON.stringify(value))
+}
+
+async function serveFrontend(
+  request: IncomingMessage,
+  response: ServerResponse,
+  pathname: string,
+) {
+  if (
+    process.env.NODE_ENV !== 'production' ||
+    (request.method !== 'GET' && request.method !== 'HEAD')
+  ) {
+    return false
+  }
+
+  let decodedPath: string
+  try {
+    decodedPath = decodeURIComponent(pathname)
+  } catch {
+    throw new HttpError(400, 'L’adresse demandée est invalide.')
+  }
+
+  const requestedFile = resolve(frontendDirectory, `.${decodedPath}`)
+  if (requestedFile !== frontendDirectory && !requestedFile.startsWith(`${frontendDirectory}${sep}`)) {
+    return false
+  }
+
+  let filePath = requestedFile
+  try {
+    const fileInfo = await stat(requestedFile)
+    if (fileInfo.isDirectory()) {
+      filePath = resolve(requestedFile, 'index.html')
+    } else if (!fileInfo.isFile()) {
+      return false
+    }
+  } catch (error) {
+    if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
+      throw error
+    }
+    if (extname(decodedPath)) {
+      return false
+    }
+    filePath = resolve(frontendDirectory, 'index.html')
+  }
+
+  const content = await readFile(filePath)
+  response.writeHead(200, {
+    'Content-Type': contentTypes[extname(filePath)] ?? 'application/octet-stream',
+    'Cache-Control': 'no-cache',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'same-origin',
+  })
+  response.end(request.method === 'HEAD' ? undefined : content)
+  return true
 }
 
 async function readJson(request: IncomingMessage): Promise<Record<string, unknown>> {
@@ -786,6 +855,9 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     return
   }
 
+  if (!pathname.startsWith('/api') && await serveFrontend(request, response, pathname)) {
+    return
+  }
   sendJson(response, 404, { error: 'Route introuvable.' })
 }
 
@@ -812,8 +884,8 @@ const server = createServer((request, response) => {
   })
 })
 
-server.listen(port, '127.0.0.1', () => {
-  console.log(`SchoolRoom backend listening at http://127.0.0.1:${port}`)
+server.listen(port, host, () => {
+  console.log(`SchoolRoom backend listening at http://${host}:${port}`)
 })
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {

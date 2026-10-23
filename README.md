@@ -57,6 +57,22 @@ Prérequis : Node.js, npm et Docker avec Docker Compose.
 
 L’inscription permet de créer un compte étudiant ou enseignant. Le choix « Administration » à la connexion ne donne pas les droits administrateur : ceux-ci sont réservés au compte configuré par `admin:create`. L’administrateur peut consulter le calendrier global, modifier les salles, gérer les indisponibilités et traiter les demandes. Après une reconnexion, l’application ouvre la vue correspondant au rôle du compte.
 
+## Déploiement sur Railway
+
+Le `Dockerfile` construit le frontend et le backend dans un même service. En production, le backend sert aussi les fichiers du frontend et applique les migrations avant de démarrer.
+
+1. Publiez le code sur GitHub sans ajouter de fichier `.env`. Le dépôt doit contenir le `Dockerfile` et le `.dockerignore`.
+2. Dans Railway, créez un projet depuis ce dépôt GitHub, puis ajoutez un service PostgreSQL.
+3. Dans les variables du service SchoolRoom, configurez :
+   - `DATABASE_URL` avec la référence à la variable `DATABASE_URL` du service PostgreSQL Railway ;
+   - `ADMIN_EMAIL` avec l’adresse du compte administrateur ;
+   - `ADMIN_PASSWORD` avec un mot de passe privé d’au moins 12 caractères ;
+   - `ADMIN_FIRST_NAME` et `ADMIN_LAST_NAME` si vous souhaitez personnaliser le nom affiché.
+4. Déployez le service et générez un domaine public depuis ses paramètres réseau. Railway fournit HTTPS pour ce domaine.
+5. Connectez-vous avec les identifiants configurés. Les salles peuvent ensuite être ajoutées depuis la section « Gestion ».
+
+À chaque démarrage, le service applique les migrations et crée ou met à jour le compte administrateur à partir des variables configurées. Gardez ces variables privées et ne placez jamais les identifiants de production dans un fichier `.env` versionné.
+
 ## Compilation
 
 ```bash
