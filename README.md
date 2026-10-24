@@ -57,21 +57,24 @@ Prérequis : Node.js, npm et Docker avec Docker Compose.
 
 L’inscription permet de créer un compte étudiant ou enseignant. Le choix « Administration » à la connexion ne donne pas les droits administrateur : ceux-ci sont réservés au compte configuré par `admin:create`. L’administrateur peut consulter le calendrier global, modifier les salles, gérer les indisponibilités et traiter les demandes. Après une reconnexion, l’application ouvre la vue correspondant au rôle du compte.
 
-## Déploiement sur Railway
+## Déploiement gratuit sur Vercel et Neon
 
-Le `Dockerfile` construit le frontend et le backend dans un même service. En production, le backend sert aussi les fichiers du frontend et applique les migrations avant de démarrer.
+Vercel héberge le frontend et exécute le backend sous forme de fonction Node.js. Neon fournit PostgreSQL. Les offres Hobby de Vercel et Free de Neon sont gratuites dans leurs limites ; vérifiez leurs conditions et quotas avant le déploiement. Le Blueprint Render n’est pas utilisé par cette procédure.
 
-1. Publiez le code sur GitHub sans ajouter de fichier `.env`. Le dépôt doit contenir le `Dockerfile` et le `.dockerignore`.
-2. Dans Railway, créez un projet depuis ce dépôt GitHub, puis ajoutez un service PostgreSQL.
-3. Dans les variables du service SchoolRoom, configurez :
-   - `DATABASE_URL` avec la référence à la variable `DATABASE_URL` du service PostgreSQL Railway ;
-   - `ADMIN_EMAIL` avec l’adresse du compte administrateur ;
-   - `ADMIN_PASSWORD` avec un mot de passe privé d’au moins 12 caractères ;
-   - `ADMIN_FIRST_NAME` et `ADMIN_LAST_NAME` si vous souhaitez personnaliser le nom affiché.
-4. Déployez le service et générez un domaine public depuis ses paramètres réseau. Railway fournit HTTPS pour ce domaine.
-5. Connectez-vous avec les identifiants configurés. Les salles peuvent ensuite être ajoutées depuis la section « Gestion ».
+1. Créez un compte sur [Vercel](https://vercel.com/) et un projet PostgreSQL gratuit sur [Neon](https://neon.tech/).
+2. Dans Neon, ouvrez **Connect** et copiez les deux URL PostgreSQL de la même branche : la connexion **pooled** (hôte contenant `-pooler`) et la connexion **directe** (sans `-pooler`).
+3. Dans Vercel, importez le dépôt GitHub `StudyRoom` et gardez la racine du projet à la racine du dépôt. Le fichier `vercel.json` définit la compilation, les migrations et le dossier du frontend.
+4. Dans **Project Settings > Environment Variables**, ajoutez pour l’environnement **Production** :
+   - `DATABASE_URL` : URL Neon pooled ;
+   - `DIRECT_URL` : URL Neon directe ;
+   - `ADMIN_EMAIL` : adresse e-mail de l’administrateur ;
+   - `ADMIN_PASSWORD` : mot de passe privé de 12 à 128 caractères.
+5. Lancez un déploiement **Production**. La commande de build génère Prisma, applique les migrations, crée ou met à jour l’administrateur, puis compile le frontend et le backend.
+6. Ouvrez l’URL `vercel.app` fournie et connectez-vous. Ajoutez les salles depuis la section « Gestion ».
 
-À chaque démarrage, le service applique les migrations et crée ou met à jour le compte administrateur à partir des variables configurées. Gardez ces variables privées et ne placez jamais les identifiants de production dans un fichier `.env` versionné.
+Pour les déploiements Preview, configurez une branche Neon et des variables de test distinctes avant de les activer. Ne connectez pas les previews à la base de production : les migrations s’exécutent pendant chaque build. Ne publiez jamais les URL PostgreSQL ou le mot de passe administrateur dans Git.
+
+Consultez les logs du déploiement Vercel en cas d’échec. Le point de contrôle de l’API est `/api/health`.
 
 ## Compilation
 

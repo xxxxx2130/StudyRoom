@@ -121,6 +121,22 @@ async function readJson(request: IncomingMessage): Promise<Record<string, unknow
     throw new HttpError(415, 'Le format de la requête doit être JSON.')
   }
 
+  const parsedRequest = request as IncomingMessage & { body?: unknown }
+  if (parsedRequest.body !== undefined) {
+    const body = JSON.stringify(parsedRequest.body)
+    if (body.length > 16_384) {
+      throw new HttpError(413, 'La requête est trop volumineuse.')
+    }
+    if (
+      typeof parsedRequest.body !== 'object' ||
+      parsedRequest.body === null ||
+      Array.isArray(parsedRequest.body)
+    ) {
+      throw new HttpError(400, 'Le contenu de la requête est invalide.')
+    }
+    return parsedRequest.body as Record<string, unknown>
+  }
+
   let body = ''
   for await (const chunk of request) {
     body += chunk.toString()
@@ -299,7 +315,7 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
     checkSameOrigin(request)
   }
 
-  if (pathname === '/health' && method === 'GET') {
+  if ((pathname === '/health' || pathname === '/api/health') && method === 'GET') {
     sendJson(response, 200, { status: 'ok' })
     return
   }
@@ -861,8 +877,10 @@ async function handleRequest(request: IncomingMessage, response: ServerResponse)
   sendJson(response, 404, { error: 'Route introuvable.' })
 }
 
-const server = createServer((request, response) => {
-  void handleRequest(request, response).catch((error: unknown) => {
+export async function handleHttpRequest(request: IncomingMessage, response: ServerResponse) {
+  try {
+    await handleRequest(request, response)
+  } catch (error: unknown) {
     if (error instanceof HttpError) {
       sendJson(response, error.statusCode, { error: error.message })
       return
@@ -881,17 +899,25 @@ const server = createServer((request, response) => {
 
     console.error('SchoolRoom API request failed:', error)
     sendJson(response, 500, { error: 'Une erreur est survenue. Réessayez plus tard.' })
+  }
+}
+
+export default handleHttpRequest
+
+if (process.env.VERCEL !== '1') {
+  const server = createServer((request, response) => {
+    void handleHttpRequest(request, response)
   })
-})
 
-server.listen(port, host, () => {
-  console.log(`SchoolRoom backend listening at http://${host}:${port}`)
-})
+  server.listen(port, host, () => {
+    console.log(`SchoolRoom backend listening at http://${host}:${port}`)
+  })
 
-for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.on(signal, () => {
-    server.close(() => {
-      void prisma.$disconnect().finally(() => process.exit(0))
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.on(signal, () => {
+      server.close(() => {
+        void prisma.$disconnect().finally(() => process.exit(0))
+      })
     })
-  })
+  }
 }

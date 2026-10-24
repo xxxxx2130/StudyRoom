@@ -9,6 +9,7 @@
     "dev:frontend": "npm run dev --workspace frontend -- --host 127.0.0.1",
     "dev:backend": "npm run dev --workspace backend",
     "build": "npm run build --workspace frontend && npm run build --workspace backend",
+    "vercel-build": "npm run db:generate --workspace backend && npm run db:deploy --workspace backend && npm run admin:create --workspace backend && npm run build",
     "db:up": "docker compose up -d",
     "db:down": "docker compose stop",
     "db:migrate": "npm run db:migrate --workspace backend",
