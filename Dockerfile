@@ -12,8 +12,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run db:generate --workspace backend && npm run build
-
+RUN DATABASE_URL="postgresql://user:password@localhost:5432/studyroom" npm run db:generate --workspace backend && npm run build
 ENV NODE_ENV=production
 
 CMD ["sh", "-c", "npm run db:deploy && npm run admin:create && npm run start --workspace backend"]
