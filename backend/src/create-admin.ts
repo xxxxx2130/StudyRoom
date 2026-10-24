@@ -13,19 +13,34 @@ async function main() {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('Définissez ADMIN_EMAIL avec une adresse e-mail valide.')
   }
+
   if (!password || password.length < 12 || password.length > 128) {
     throw new Error('Définissez ADMIN_PASSWORD (12 à 128 caractères).')
   }
 
-  const passwordHash = await hashPassword(password)
-  const admin = await prisma.user.upsert({
+  const existingAdmin = await prisma.user.findUnique({
     where: { email },
-    update: { firstName, lastName, role: UserRole.ADMIN, passwordHash },
-    create: { email, firstName, lastName, role: UserRole.ADMIN, passwordHash },
-    select: { email: true },
+    select: { id: true },
   })
 
-  console.log(`Compte administrateur prêt : ${admin.email}`)
+  if (existingAdmin) {
+    console.log('Le compte existe déjà : aucune modification effectuée.')
+    return
+  }
+
+  const passwordHash = await hashPassword(password)
+
+  await prisma.user.create({
+    data: {
+      email,
+      firstName,
+      lastName,
+      role: UserRole.ADMIN,
+      passwordHash,
+    },
+  })
+
+  console.log(`Compte administrateur créé : ${email}`)
 }
 
 main()
