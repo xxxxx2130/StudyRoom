@@ -1419,7 +1419,12 @@ html[data-theme='dark'] .status-cancelled {
     display: grid;
     gap: 10px 8px;
     grid-template-columns: minmax(0, 1fr) auto;
+    margin: 0 -17px;
     padding: 12px 0;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--page-bg, #191c18);
   }
 
   .app-header > .brand {
@@ -1667,6 +1672,11 @@ html[data-theme='dark'] .status-cancelled {
 @media (max-width: 380px) {
   .app-shell {
     padding: 0 12px;
+  }
+
+  .app-header {
+    margin-inline: -12px;
+    padding-inline: 12px;
   }
 
   .auth-brand {
